@@ -1,6 +1,6 @@
 # DataAnalytics-Assessment
 
-This repository contains SQL solutions for a data analyst proficiency assessment. The goal of this project is to demonstrate the ability to write clear, efficient, and accurate SQL queries to solve real-world business problems across multiple tables.
+This repository contains solutions to a SQL-based Data Analyst Assessment. It demonstrates the use of SQL to solve real-world business problems by querying user accounts, savings and investment data, and customer transaction behavior.
 
 ---
 
@@ -13,101 +13,101 @@ DataAnalytics-Assessment/
 ├── Assessment_Q3.sql
 ├── Assessment_Q4.sql
 └── README.md
+```
 
-
----
-
-
-## Assessment Overview
-
-The dataset consists of the following tables:
-
-The assessment tests SQL proficiency in solving real-world business queries using multiple tables:
-- `users_customuser`
-- `savings_savingsaccount`
-- `plans_plan`
-- `withdrawals_withdrawal`– Records of withdrawal transactions (not used in this assessment).
-
-Each SQL file solves a distinct business problem using data from the provided tables.
+Each SQL file addresses a separate question using MySQL-compatible syntax.
 
 ---
 
-##  Questions & Approaches
+## Dataset Overview
+The SQL queries make use of the following tables:
 
-### **Assessment_Q1.sql**  
-**Task**: Find customers with at least one funded savings plan and one funded investment plan. Sort them by total deposits.
+- `users_customuser`: Contains customer profile and registration information.
+- `savings_savingsaccount`: Records of savings transactions (inflows).
+- `plans_plan`: Contains metadata about financial plans (savings or investments).
+- `withdrawals_withdrawal`: Contains withdrawal transaction records (not used in this assessment).
+
+All monetary values are stored in **kobo** and converted to **naira** where applicable.
+
+---
+
+## Question Summaries and Solutions
+
+### **Assessment_Q1.sql** – High-Value Customers with Multiple Products
+**Scenario**: Identify customers who have at least one funded savings plan and one funded investment plan.
 
 **Approach**:
-- Filter savings inflows from `savings_savingsaccount`.
-- Count how many savings and investment plans each customer has from `plans_plan`.
-- Aggregate total deposits and format output by user.
-- Only include customers with at least one of each plan type.
+- Use `plans_plan` and `savings_savingsaccount` to aggregate savings and investment plans.
+- Join on `plan_id` to match transactions to plans.
+- Filter for `is_regular_savings = 1` and `is_a_fund = 1`.
+- Aggregate total deposits and count plan types per customer.
+- Return users who meet both criteria, sorted by total deposits.
 
 ---
 
-### **Assessment_Q2.sql**  
-**Task**: Categorize customers based on average number of transactions per month into:
-- High Frequency (≥10/month)
-- Medium Frequency (3–9/month)
-- Low Frequency (≤2/month)
+### **Assessment_Q2.sql** – Transaction Frequency Analysis
+**Scenario**: Categorize customers into frequency tiers based on their average transactions per month.
 
 **Approach**:
-- Extract monthly transaction counts from savings data.
-- Compute the average monthly transactions per customer.
-- Categorize customers based on this average and count how many fall into each group.
+- Group transactions by `owner_id` and month.
+- Calculate average monthly transaction volume per customer.
+- Assign frequency categories:
+  - High Frequency: ≥ 10/month
+  - Medium Frequency: 3–9/month
+  - Low Frequency: < 3/month
+- Count number of users per category and average transaction rate.
 
 ---
 
-###  **Assessment_Q3.sql**  
-**Task**: Identify all savings and investment accounts with no inflow in the last 365 days.
+### **Assessment_Q3.sql** – Account Inactivity Alert
+**Scenario**: Flag savings or investment accounts with no inflow transactions in the past 365 days.
 
 **Approach**:
-- Get the most recent `transaction_date` for savings and `created_on` for investment plans.
-- Use `DATEDIFF()` to calculate inactivity in days.
-- Filter for accounts where the last inflow was over a year ago.
+- Use `MAX(transaction_date)` to determine the latest activity for each plan.
+- Filter for plans where the most recent transaction is older than one year.
+- Return `plan_id`, `owner_id`, account `type`, last activity date, and days since.
 
 ---
 
-### **Assessment_Q4.sql**  
-**Task**: Estimate Customer Lifetime Value (CLV) based on account tenure and transaction volume.
+### **Assessment_Q4.sql** – Customer Lifetime Value (CLV)
+**Scenario**: Estimate customer value using tenure and transaction data.
 
-**CLV Formula**:
-\[
-\text{CLV} = \left(\frac{\text{total transactions}}{\text{tenure in months}} \right) \times 12 \times \text{avg profit per transaction}
-\]
-Assumed average profit per transaction = **0.1%**
+**Formula**:
+```
+CLV = (total_transactions / tenure_months) * 12 * (0.001 * avg_transaction_value)
+```
 
 **Approach**:
-- Calculate tenure in months using `PERIOD_DIFF()` between current date and `date_joined`.
-- Count confirmed transactions and convert `confirmed_amount` from kobo to naira.
-- Apply the CLV formula and rank customers by value.
+- Calculate months since `date_joined` for each customer.
+- Aggregate confirmed transactions and average transaction value.
+- Apply the simplified CLV formula.
+- Return ranked results by estimated value.
 
 ---
 
-## Technologies Used
-
-- SQL (MySQL syntax)
-- Date formatting and aggregation functions
-- Common Table Expressions (CTEs)
-
----
-
-## Challenges Encountered
-
-- Ensuring compatibility between PostgreSQL and MySQL syntax (e.g., handling `::date`, `DATE_TRUNC`, `AGE()`).
-- Convert all amounts from kobo to naira to ensure accurate output.
-- Managing NULL or missing values for edge cases in joins and calculations.
+## Tools & Features Used
+- MySQL SQL syntax
+- CTEs (Common Table Expressions)
+- Aggregate functions: `COUNT`, `SUM`, `AVG`, `ROUND`
+- Date functions: `DATEDIFF`, `TIMESTAMPDIFF`, `EXTRACT`, `DATE_SUB`
+- Conditional logic: `CASE`, `COALESCE`, `NULLIF`
 
 ---
 
-##  How to Run
+## Challenges Faced
+- Ensured compatibility with MySQL syntax (avoided PostgreSQL-specific functions).
+- Converted monetary amounts from kobo to naira.
+- Handled missing or null values with safe defaults (e.g., `COALESCE`, `NULLIF`).
+- Carefully joined data to prevent row multiplication.
 
-1. Use a MySQL-compatible environment (MySQL Workbench).
-2. Run each SQL file independently depending on the question of interest.
-3. Ensure all four datasets (`users_customuser`, `savings_savingsaccount`, `plans_plan`, `withdrawals_withdrawal`) are available in your schema.
+---
+
+## How to Run
+1. Use a MySQL-compatible environment (e.g., MySQL Workbench, db-fiddle).
+2. Make sure the schema includes the required tables.
+3. Run each query independently in your SQL interface.
 
 ---
 
 ## Author
-
-This assessment was completed by **Oluwatobi Ijete** as part of a technical evaluation for a data analyst role.
+This project was completed by **Oluwatobi Ijete** as part of a Data Analyst technical evaluation.

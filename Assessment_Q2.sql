@@ -1,53 +1,58 @@
 -- Categorize customers by their average number of transactions per month
 
--- Step 1: Aggregate the number of transactions per customer per month
-WITH monthly_txns AS (
-    SELECT
-        s.owner_id,  -- Unique identifier of the customer
-        DATE_FORMAT(s.transaction_date, '%Y-%m-01') AS txn_month,  -- Normalize to the first day of the transaction month
-        COUNT(*) AS txns_per_month  -- Count of transactions in that month
-    FROM
-        savings_savingsaccount s
-    WHERE
-        s.confirmed_amount > 0  -- Only include confirmed transactions
-        AND s.transaction_date IS NOT NULL  -- Ensure transaction date is present
-    GROUP BY
+WITH 
+-- Step 1: Calculate transactions per customer per month
+monthly_transactions AS (
+    SELECT 
         s.owner_id,
-        DATE_FORMAT(s.transaction_date, '%Y-%m-01')
+        EXTRACT(YEAR FROM s.created_on) AS year,
+        EXTRACT(MONTH FROM s.created_on) AS month,
+        COUNT(*) AS transaction_count
+    FROM 
+        savings_savingsaccount s
+    GROUP BY 
+        s.owner_id, 
+        EXTRACT(YEAR FROM s.created_on), 
+        EXTRACT(MONTH FROM s.created_on)
 ),
 
--- Step 2: Compute average transactions per month for each customer
-avg_txns AS (
-    SELECT
-        owner_id,  -- Customer ID
-        AVG(txns_per_month) AS avg_txns_per_month  -- Average monthly transaction count
-    FROM
-        monthly_txns
-    GROUP BY
+-- Step 2: Calculate average monthly transactions per customer
+avg_transactions AS (
+    SELECT 
+        owner_id,
+        AVG(transaction_count) AS avg_transactions_per_month
+    FROM 
+        monthly_transactions
+    GROUP BY 
         owner_id
 ),
 
--- Step 3: Categorize customers based on their average monthly transaction volume
-categorized AS (
-    SELECT
-        CASE
-            WHEN avg_txns_per_month >= 10 THEN 'High Frequency'       -- 10 or more transactions/month
-            WHEN avg_txns_per_month BETWEEN 3 AND 9 THEN 'Medium Frequency'  -- 3 to 9 transactions/month
-            ELSE 'Low Frequency'                                      -- Fewer than 3 transactions/month
+-- Step 3: Categorize customers based on average transaction frequency
+categorized_customers AS (
+    SELECT 
+        CASE 
+            WHEN avg_transactions_per_month >= 10 THEN 'High Frequency'
+            WHEN avg_transactions_per_month >= 3 AND avg_transactions_per_month < 10 THEN 'Medium Frequency'
+            ELSE 'Low Frequency'
         END AS frequency_category,
-        avg_txns_per_month
-    FROM
-        avg_txns
+        owner_id,
+        avg_transactions_per_month
+    FROM 
+        avg_transactions
 )
 
--- Step 4: Aggregate final counts and averages by frequency category
-SELECT
-    frequency_category,  -- Category label
-    COUNT(*) AS customer_count,  -- Number of customers in the category
-    ROUND(AVG(avg_txns_per_month), 1) AS avg_transactions_per_month  -- Average transactions/month in the group
-FROM
-    categorized
-GROUP BY
+-- Step 4: Aggregate results by transaction frequency category
+SELECT 
+    frequency_category,
+    COUNT(*) AS customer_count,
+    ROUND(AVG(avg_transactions_per_month), 1) AS avg_transactions_per_month
+FROM 
+    categorized_customers
+GROUP BY 
     frequency_category
-ORDER BY
-    avg_transactions_per_month DESC;  -- Show most active groups first
+ORDER BY 
+    CASE 
+        WHEN frequency_category = 'High Frequency' THEN 1
+        WHEN frequency_category = 'Medium Frequency' THEN 2
+        WHEN frequency_category = 'Low Frequency' THEN 3
+    END;

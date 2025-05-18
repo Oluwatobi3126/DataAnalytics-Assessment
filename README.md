@@ -103,11 +103,6 @@ CLV = (total_transactions / tenure_months) * 12 * (0.001 * avg_transaction_value
 ---
 
 ## How to Run
-1. Use a MySQL-compatible environment (e.g., MySQL Workbench, db-fiddle).
+1. Use a MySQL-compatible environment (MySQL Workbench).
 2. Make sure the schema includes the required tables.
 3. Run each query independently in your SQL interface.
-
----
-
-## Author
-This project was completed by **Oluwatobi Ijete** as part of a Data Analyst technical evaluation.
